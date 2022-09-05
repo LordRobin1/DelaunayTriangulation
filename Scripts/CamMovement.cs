@@ -1,18 +1,18 @@
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class CamMovement : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
+    int speed = 5;
+
+    //speed is dynamically changed with a slider in unity
+    public void changeSpeed (float value) {
+        speed = (int)value;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+    void Update() {
+        transform.Translate(0, 0, Input.GetAxis("Vertical") * speed * Time.deltaTime);
     }
 }
