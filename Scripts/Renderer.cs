@@ -49,7 +49,7 @@ public class Renderer : MonoBehaviour {
             Gizmos.DrawLine(triangle.b, triangle.c);
             Gizmos.DrawLine(triangle.c, triangle.a);
 
-            DrawCircle(triangle);
+            //DrawCircle(triangle);
         }
     }
 }

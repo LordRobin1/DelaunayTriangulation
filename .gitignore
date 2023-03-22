@@ -3,3 +3,4 @@
 *.asset
 /Settings
 /TextMesh Pro
+.vs/

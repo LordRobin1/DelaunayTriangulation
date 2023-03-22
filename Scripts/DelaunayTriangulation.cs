@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 
@@ -99,6 +100,16 @@ namespace Delaunay {
                 return inside;
             }
 
+            public bool IsCounterClockwise() {
+                float signedSum = 0;
+
+                signedSum += (b.x - a.x) * (b.y + a.y);
+                signedSum += (c.x - b.x) * (c.y + b.y);
+                signedSum += (a.x - c.x) * (a.y + c.y);
+
+                return signedSum < 0;
+            }
+
             // just for visualization
             public CircumCircle GetCircumCircle() {
                 Vector3 cross = Vector3.Cross(ab, bc);
@@ -146,6 +157,7 @@ namespace Delaunay {
             // testing stuff
             CircumCircle circumCircle = bigtri.GetCircumCircle();
             Debug.Log($"Circumcircle: {circumCircle.center}, {circumCircle.radius}");
+            Debug.Log(bigtri.IsCounterClockwise());
         }
 
         void OnDrawGizmos() {
@@ -164,9 +176,7 @@ namespace Delaunay {
                 points[i] = new Vector3(Random.Range(-20, 20), Random.Range(-20, 20), 0.0f);
             }
             tris.Clear();
-
             Initialize();
-
             Triangulation();
         }
 
@@ -175,9 +185,25 @@ namespace Delaunay {
             points = points.Skip(1).ToArray();
         }
 
-        void Triangulation() {
+        void Triangulation() { 
             foreach (Vector3 point in points) {
                 AddVertex(point);
+            }
+
+            List<Triangle> badtriangles = new List<Triangle>();
+
+            foreach (Triangle tri in tris) {
+
+                (bool a_bad, bool b_bad, bool c_bad) = 
+                    CommonPoints(tri, bigtri);
+
+                if (a_bad || b_bad || c_bad) { 
+                    badtriangles.Add(tri);
+                }
+            }
+
+            foreach(Triangle tri in badtriangles) {
+                tris.Remove(tri);
             }
         }
 
@@ -210,48 +236,67 @@ namespace Delaunay {
 
             for (int i = 0; i < badTriangles.Count; i++) {
                 Triangle tri = badTriangles[i];
-                Edge ab = tri.edge_ab;
-                Edge bc = tri.edge_bc;
-                Edge ca = tri.edge_ca;
+                bool ab_bad = false;
+                bool bc_bad = false;
+                bool ca_bad = false;
 
                 for (int j = 0; j < badTriangles.Count; j++) {
                     if (i == j) continue;
-
                     Triangle tri_2 = badTriangles[j];
-                    Edge ab_2 = tri_2.edge_ab;
-                    Edge bc_2 = tri_2.edge_bc;
-                    Edge ca_2 = tri_2.edge_ca;
-
-                    if (!ab.Equals(ab_2) && !ab.Equals(bc_2) && !ab.Equals(ca_2)) {
-                        polygon.Add(ab);
-                    }
-                    if (!bc.Equals(ab_2) && !bc.Equals(bc_2) && !bc.Equals(ca_2)) {
-                        polygon.Add(bc);
-                    }
-                    if (!ca.Equals(ab_2) && !ca.Equals(bc_2) && !ca.Equals(ca_2)) {
-                        polygon.Add(ca);
-                    }
+                    (ab_bad, bc_bad, ca_bad) = CommonEdges(tri, tri_2);
                 }
+                if (!ab_bad) polygon.Add(tri.edge_ab);
+                if (!bc_bad) polygon.Add(tri.edge_bc);
+                if (!ca_bad) polygon.Add(tri.edge_ca);
             }
 
             foreach (Triangle tri in badTriangles) {
                 tris.Remove(tri);
-                //if(badTriangles.Contains(tri)) {
-                //}
             }
 
             foreach (Edge edge in polygon) {
-                // don't know if counterclockwise order of points is preserved
-                // which is important for the matrix's determinant's value
-                // this is most likely a big problem for future Roachl
                 Triangle newTri = new(edge.a, edge.b, p);
+
+                if (!newTri.IsCounterClockwise()) {
+                    newTri = new(edge.a, p, edge.b);
+                }
+                Debug.Log(newTri);
                 tris.Add(newTri);
             }
 
             return;
         }
 
+        (bool, bool, bool) CommonEdges(Triangle fst, Triangle snd) {
+            if (fst == snd) {
+                return (true, true, true);
+            }
+            Edge ab = fst.edge_ab;
+            Edge bc = fst.edge_bc;
+            Edge ca = fst.edge_ca;
+
+            bool ab_bad = false;
+            bool bc_bad = false;
+            bool ca_bad = false;
+
+            Edge ab_2 = snd.edge_ab;
+            Edge bc_2 = snd.edge_bc;
+            Edge ca_2 = snd.edge_ca;
+
+            if (ab.Equals(ab_2) || ab.Equals(bc_2) || ab.Equals(ca_2)) {
+                ab_bad = true;
+            }
+            if (bc.Equals(ab_2) || bc.Equals(bc_2) || bc.Equals(ca_2)) {
+                bc_bad = true;
+            }
+            if (ca.Equals(ab_2) || ca.Equals(bc_2) || ca.Equals(ca_2)) {
+                ca_bad = true;
+            }
+            return (ab_bad, bc_bad, ca_bad);
+        }
+
         void AddSingleTri(Triangle currentTri, Vector3 point) {
+            // need to check for counterclockwise order
             Triangle a = new Triangle(
                 currentTri.a,
                 currentTri.b,
@@ -274,6 +319,25 @@ namespace Delaunay {
 
             tris.Remove(currentTri);
         }
+
+        (bool, bool, bool) CommonPoints(Triangle fst, Triangle snd) {
+            bool a_same = false;
+            bool b_same = false;
+            bool c_same = false;
+
+            if (fst.a == snd.a || fst.a == snd.b || fst.a == snd.c) {
+                a_same = true;
+            }
+            if (fst.b == snd.a || fst.b == snd.b || fst.b == snd.c) {
+                b_same = true;
+            }
+            if (fst.c == snd.a || fst.c == snd.b || fst.c == snd.c) {
+                c_same = true;
+            }
+            return (a_same, b_same, c_same);
+        }
+
+
 
         // (weight 1, weight 2, inside triangle) # unused, except the determinant thing turns out to not be working
         (double, double, bool) RelativePosition(Triangle tri, Vector3 p) {
