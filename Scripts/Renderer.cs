@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-using static Delaunay.DelaunayTriangulation;
+using static Delaunay.TriangleTypes;
 
 public class Renderer : MonoBehaviour {
 
