@@ -77,13 +77,20 @@ namespace Delaunay {
             }
 
             // not truly equal, orientation etc. could be different
-            public bool Equals(Triangle tri) {
-                return  (a == tri.a || a == tri.b || a == tri.c) &&
-                        (b == tri.a || b == tri.b || b == tri.c) &&
-                        (c == tri.a || c == tri.b || c == tri.c);
+            public bool Equals(Triangle other_tri) {
+                return  (a == other_tri.a || a == other_tri.b || a == other_tri.c) &&
+                        (b == other_tri.a || b == other_tri.b || b == other_tri.c) &&
+                        (c == other_tri.a || c == other_tri.b || c == other_tri.c);
+            }
+            
+            public static bool operator == (Triangle tri_1, Triangle tri_2) {
+                return tri_1.Equals(tri_2);
+            }
+            public static bool operator != (Triangle tri_1, Triangle tri_2) {
+                return !tri_1.Equals(tri_2);
             }
 
-            // just for visualization
+            #region just for visualization
             public CircumCircle GetCircumCircle() {
                 Vector3 cross = Vector3.Cross(ab, bc);
                 Vector3 direction_1 = Vector3.Cross(ab, cross);
@@ -111,9 +118,9 @@ namespace Delaunay {
 
                 return intersection;
             }
-
+            #endregion
         }
-        
+
         public struct CircumCircle {
             public Vector3 center;
             public float radius;
@@ -141,6 +148,18 @@ namespace Delaunay {
             public Edge(Vector3 _a, Vector3 _b) {
                 a = _a;
                 b = _b;
+            }
+
+            public bool Equals(Edge other) {
+                return (a == other.a || a == other.b) &&
+                       (b == other.a || b == other.b);
+            }
+
+            public static bool operator == (Edge e_1, Edge e_2) {
+                return e_1.Equals(e_2);
+            }
+            public static bool operator != (Edge e_1, Edge e_2) {
+                return !e_1.Equals(e_2);
             }
         }
     }
