@@ -125,7 +125,7 @@ namespace Delaunay {
             #endregion
         }
 
-        public struct CircumCircle {
+        public class CircumCircle {
             public Vector3 center;
             public float radius;
 
