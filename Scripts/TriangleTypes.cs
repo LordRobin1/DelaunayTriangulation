@@ -77,6 +77,10 @@ namespace Delaunay {
             }
 
             // not truly equal, orientation etc. could be different
+            public override bool Equals(object obj) => this.Equals(obj as Triangle);
+
+            public override int GetHashCode() => this.GetHashCode(); //compiler complains without
+
             public bool Equals(Triangle other_tri) {
                 return  (a == other_tri.a || a == other_tri.b || a == other_tri.c) &&
                         (b == other_tri.a || b == other_tri.b || b == other_tri.c) &&
@@ -131,7 +135,7 @@ namespace Delaunay {
             }
         }
 
-        public struct Line {
+        public class Line {
             public Vector3 start;
             public Vector3 direction;
 
@@ -141,7 +145,7 @@ namespace Delaunay {
             }
         }
 
-        public struct Edge {
+        public class Edge {
             public Vector3 a;
             public Vector3 b;
 
@@ -149,6 +153,10 @@ namespace Delaunay {
                 a = _a;
                 b = _b;
             }
+
+            public override bool Equals(object obj) => this.Equals(obj as Edge);
+
+            public override int GetHashCode() => this.GetHashCode(); //compiler complains without
 
             public bool Equals(Edge other) {
                 return (a == other.a || a == other.b) &&

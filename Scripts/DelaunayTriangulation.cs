@@ -81,15 +81,15 @@ public class DelaunayTriangulation : MonoBehaviour {
 
         foreach (Triangle tri in tris) {
 
-            (bool a_bad, bool b_bad, bool c_bad) = 
+            (bool a_bad, bool b_bad, bool c_bad) =
                 CommonPoints(tri, bigtri);
 
-            if (a_bad || b_bad || c_bad) { 
+            if (a_bad || b_bad || c_bad) {
                 badtriangles.Add(tri);
             }
         }
 
-        foreach(Triangle tri in badtriangles) {
+        foreach (Triangle tri in badtriangles) {
             tris.Remove(tri);
         }
     }
