@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Collections;
 using System.Linq;
 using UnityEngine;
 using static Delaunay.TriangleTypes;
@@ -34,7 +33,10 @@ public class DelaunayTriangulation : MonoBehaviour {
         // draw points 
         foreach (Vector3 point in points) {
             Gizmos.color = Color.red;
-            Gizmos.DrawSphere(point, .25f);
+            if (index < points.Length && point == points[index]) {
+                Gizmos.color = Color.green;
+            }
+            Gizmos.DrawSphere(point, .5f);
         }
         render.SetTriangles(tris, points);
     }
@@ -58,13 +60,22 @@ public class DelaunayTriangulation : MonoBehaviour {
     void Update() { // previously Triangulation
         Timer();
 
-        if (time <= 0 && Input.GetKey(KeyCode.Space) && index < points.Length) {
-            AddVertex(points[index]);
-            index++;
-            time = 2;
-            return;
+        if (time <= 0 && Input.GetKey(KeyCode.Space)) {
+            if (index < points.Length) {
+                AddVertex(points[index]);
+                index++;
+                time = 1;
+                return;
+            }
+            CleanUp();
         }
-        // CleanUp();
+        if (time <= 0 && Input.GetKey(KeyCode.F)) {
+            RandomizePoints();
+            index = 0;
+            time = 1;
+        }
+
+        // to automatically run it
         //foreach (Vector3 point in points) {
         //    AddVertex(point);
         //}
@@ -133,14 +144,12 @@ public class DelaunayTriangulation : MonoBehaviour {
                 Triangle tri_2 = badTriangles[j];
                 (ab_bad, bc_bad, ca_bad) = CommonEdges(tri, tri_2);
             }
-            // don't keep multiples, edges can be reversed but they're still considered the same!
             if (!ab_bad && !polygon.Contains(tri.edge_ab)) polygon.Add(tri.edge_ab);
             if (!bc_bad && !polygon.Contains(tri.edge_bc)) polygon.Add(tri.edge_bc);
             if (!ca_bad && !polygon.Contains(tri.edge_ca)) polygon.Add(tri.edge_ca);
         }
 
         foreach (Triangle tri in badTriangles) {
-            // Triangles can be same, even though their points are differently oriented
             Debug.LogWarning(tris.Remove(tri));
         }
 
@@ -152,11 +161,9 @@ public class DelaunayTriangulation : MonoBehaviour {
             }
             tris.Add(newTri);
         }
-        return;
     }
 
     (bool, bool, bool) CommonEdges(Triangle fst, Triangle snd) {
-        // does not cover edge case of edges being the same apart from being reversed
         if (fst == snd) {
             return (true, true, true);
         }
@@ -172,13 +179,13 @@ public class DelaunayTriangulation : MonoBehaviour {
         Edge bc_2 = snd.edge_bc;
         Edge ca_2 = snd.edge_ca;
 
-        if (ab.Equals(ab_2) || ab.Equals(bc_2) || ab.Equals(ca_2)) {
+        if (ab == ab_2 || ab == bc_2 || ab == ca_2) {
             ab_bad = true;
         }
-        if (bc.Equals(ab_2) || bc.Equals(bc_2) || bc.Equals(ca_2)) {
+        if (bc == ab_2 || bc == bc_2 || bc == ca_2) {
             bc_bad = true;
         }
-        if (ca.Equals(ab_2) || ca.Equals(bc_2) || ca.Equals(ca_2)) {
+        if (ca == ab_2 || ca == bc_2 || ca == ca_2) {
             ca_bad = true;
         }
         return (ab_bad, bc_bad, ca_bad);
